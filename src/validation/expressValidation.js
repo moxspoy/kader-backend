@@ -3,7 +3,7 @@ const {check} = require('express-validator');
 const expressValidation = (method) => {
     switch (method) {
         case 'createUser': {
-            return [
+            const error = [
                 check('username', 'Username minimal terdiri dari 6 karakter huruf kecil')
                     .exists()
                     .isAlpha('en-US')
@@ -27,7 +27,9 @@ const expressValidation = (method) => {
                 check('status', 'Status yang dimasukkan salah')
                     .exists()
                     .isIn([1, 2, 3, 4, 5])
-            ]
+            ];
+
+            return error;
         }
     }
 }
