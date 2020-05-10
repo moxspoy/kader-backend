@@ -4,6 +4,7 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const session = require('express-session');
+const {checkingApiKeyHandler} = require('./src/util/security/apiChecking');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
@@ -36,6 +37,8 @@ app.use(function (req, res, next) {
   if (msg) res.locals.message = console.log(msg);
   next();
 });
+
+app.use('/', checkingApiKeyHandler)
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 
