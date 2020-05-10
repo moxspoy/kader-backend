@@ -1,5 +1,7 @@
 const WRONG_INPUT_CODE = 1000;
+const DATABASE_ERROR_CODE = 2000;
 
 module.exports = {
-    WRONG_INPUT_CODE
+    WRONG_INPUT_CODE,
+    DATABASE_ERROR_CODE
 }
