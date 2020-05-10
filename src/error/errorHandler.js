@@ -1,7 +1,7 @@
-function getErrorMessage(status, message) {
+function error(status, message) {
     return {status, message};
 }
 
 module.exports = {
-    getErrorMessage
+    error
 }
