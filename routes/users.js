@@ -1,6 +1,7 @@
 const {hashPassword} = require("../src/util/security/password");
 const {expressValidation} = require("../src/validation/expressValidation");
 const {validationResult} = require('express-validator');
+const {WRONG_INPUT_CODE} = require('../src/constants/errorCodes');
 
 const {pool} = require('../src/database/connection');
 const express = require('express');
@@ -15,8 +16,12 @@ router.post('/', expressValidation('createUser'), (req, res) => {
   const body = req.body;
 
   const errors = validationResult(req);
+
   if (!errors.isEmpty()) {
-    return res.status(422).json({errors: errors.array()});
+    return res.status(422).json({
+      code: WRONG_INPUT_CODE,
+      errors: errors.array()
+    });
   }
 
   hashPassword(body.password, (hashedPassword) => {
