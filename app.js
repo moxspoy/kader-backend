@@ -4,7 +4,11 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const session = require('express-session');
+const jwt = require('express-jwt');
 const {checkingApiKeyHandler} = require('./src/util/security/apiChecking');
+const {sessionManagement} = require('./src/util/security/sessionManagement');
+const {generateErrorResponse} = require('./src/error/errorHandler');
+const {JWT_SECRET} = require('./src/constants/securityConstant');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
@@ -38,7 +42,9 @@ app.use(function (req, res, next) {
   next();
 });
 
-app.use('/', checkingApiKeyHandler)
+// app.use(jwt({secret: JWT_SECRET}).unless({path: ['/', '/users/login',]}));
+app.use('/', sessionManagement);
+app.use('/', checkingApiKeyHandler);
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 
