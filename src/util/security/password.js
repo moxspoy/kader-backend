@@ -1,12 +1,20 @@
-const hash = require('pbkdf2-password')();
+const bkfd2Password = require("pbkdf2-password");
+const hasher = bkfd2Password();
 
-function hashPassword(plainPassword, fn) {
+function hashPassword(hashOptions, fn) {
     let hashed = {};
-    hash({password: plainPassword}, (err, pass, salt, hash) => {
-        if (err) throw err;
-        hashed = {salt, hash};
-        fn(hashed);
-    });
+    if (!hashOptions.salt) {
+        hasher(hashOptions, (err, pass, salt, hash) => {
+            if (err) throw err;
+            hashed = {salt, hash};
+            fn(hashed);
+        });
+    } else {
+        hasher(hashOptions, (err, pass, salt, hash2) => {
+            hashed = {salt, hash: hash2};
+            fn(hashed);
+        });
+    }
 }
 
 module.exports = {
