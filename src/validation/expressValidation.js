@@ -28,7 +28,20 @@ const expressValidation = (method) => {
                     .exists()
                     .isIn([1, 2, 3, 4, 5])
             ];
+            return error;
+        }
 
+        case 'login': {
+            const error = [
+                check('username', 'Username minimal terdiri dari 6 karakter huruf kecil')
+                    .exists()
+                    .isAlpha('en-US')
+                    .isLowercase()
+                    .isLength({min: 6}),
+                check('password', 'Password harus terdiri dari 8 karakter dan tidak mengandung karakter khusus')
+                    .exists()
+                    .matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z]{8,}$/, "i"),
+            ];
             return error;
         }
     }
