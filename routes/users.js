@@ -1,11 +1,15 @@
 const {hashPassword} = require("../src/util/security/password");
 const {expressValidation} = require("../src/validation/expressValidation");
+const {generateErrorResponse} = require("../src/error/errorHandler");
 const {validationResult} = require('express-validator');
-const {WRONG_INPUT_CODE, DATABASE_ERROR_CODE} = require('../src/constants/errorCodes');
+const {WRONG_INPUT_CODE, INVALID_USERNAME_OR_PASSWORD, DATABASE_ERROR_CODE} = require('../src/constants/errorCodes');
+const {JWT_SECRET} = require('../src/constants/securityConstant');
 
 const {pool} = require('../src/database/connection');
 const express = require('express');
 const router = express.Router();
+
+const jwt = require('express-jwt');
 
 /* GET users listing. */
 router.get('/', (req, res, next) => {
@@ -30,6 +34,9 @@ router.get('/', (req, res, next) => {
 
 router.post('/', expressValidation('createUser'), (req, res) => {
   const body = req.body;
+  const hashOptions = {
+    password: body.password
+  };
 
   const errors = validationResult(req);
 
@@ -40,7 +47,7 @@ router.post('/', expressValidation('createUser'), (req, res) => {
     });
   }
 
-  hashPassword(body.password, (hashedPassword) => {
+  hashPassword(hashOptions, (hashedPassword) => {
     const query = 'INSERT INTO users (username, email, fullname, password, salt, address, campus, status) ' +
         'VALUES (?,?, ?, ?, ?, ?, ?, ?)';
     const values = [body.username, body.email, body.fullname, hashedPassword.hash, hashedPassword.salt, body.address, body.campus, body.status];
@@ -62,6 +69,69 @@ router.post('/', expressValidation('createUser'), (req, res) => {
       if (err) return res.send(400);
       con.query(query, values, handler);
     });
+  });
+});
+
+
+router.post('/login', expressValidation('login'), (req, res) => {
+  const body = req.body;
+  const hashOptions = {
+    password: body.password
+  };
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.status(422).json({
+      code: WRONG_INPUT_CODE,
+      errors: errors.array()
+    });
+  }
+
+  pool.getConnection((err, con) => {
+    const query = 'SELECT salt, password FROM users WHERE username = ?';
+    const values = [body.username];
+    const handler = (error, results, fields) => {
+      if (results && results.length && results[0].salt) {
+        const saltFromDatabase = results[0].salt;
+        const hashFromDatabase = results[0].password;
+        hashOptions.salt = saltFromDatabase;
+
+        hashPassword(hashOptions, (hashedPassword) => {
+          if (hashedPassword.hash === hashFromDatabase) {
+            const newQuery = 'SELECT * FROM users WHERE username = ? AND salt = ?';
+            const newValues = [body.username, saltFromDatabase];
+            const handler = (error, results, fields) => {
+              if (error) throw error;
+              if (results.length > 0) {
+                req.session.loggedin = true;
+                req.session.username = body.username;
+
+                const data = {
+                  userId: results[0].id,
+                  message: 'Login success'
+                }
+
+                return res.send(data);
+              } else {
+                res.send(generateErrorResponse(401, INVALID_USERNAME_OR_PASSWORD, 'Username atau Password yang dimasukkan salah'));
+              }
+              pool.end();
+            };
+
+            pool.getConnection((err, con) => {
+              if (err) return res.send(400);
+              con.query(newQuery, newValues, handler);
+            });
+          } else {
+            res.send(generateErrorResponse(401, INVALID_USERNAME_OR_PASSWORD, 'Username atau Password yang dimasukkan salah'));
+          }
+        });
+      } else {
+        res.send(generateErrorResponse(401, INVALID_USERNAME_OR_PASSWORD, 'Username atau Password yang dimasukkan salah'));
+      }
+    }
+    if (err) return res.send(400);
+    con.query(query, values, handler);
   });
 })
 
