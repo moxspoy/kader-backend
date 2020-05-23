@@ -22,7 +22,6 @@ router.get('/', (req, res, next) => {
 
       const filteredResult = results.map(({password, salt, ...remains}) => remains)
       res.send(filteredResult);
-      pool.end();
     }
     con.query(query, handler);
   });
@@ -58,7 +57,7 @@ router.post('/', expressValidation('createUser'), (req, res) => {
         status: body.status,
       }
       res.send(data);
-      pool.end();
+      res.end();
     };
 
     pool.getConnection((err, con) => {
@@ -111,7 +110,6 @@ router.post('/login', expressValidation('login'), (req, res) => {
               } else {
                 res.send(generateErrorResponse(401, INVALID_USERNAME_OR_PASSWORD, 'Username atau Password yang dimasukkan salah'));
               }
-              pool.end();
             };
 
             pool.getConnection((err, con) => {
