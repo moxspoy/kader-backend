@@ -98,9 +98,6 @@ router.post('/login', expressValidation('login'), (req, res) => {
             const handler = (error, results, fields) => {
               if (error) throw error;
               if (results.length > 0) {
-                req.session.loggedin = true;
-                req.session.username = body.username;
-
                 const data = {
                   userId: results[0].id,
                   message: 'Login success'
