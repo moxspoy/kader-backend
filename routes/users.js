@@ -9,7 +9,7 @@ const {pool} = require('../src/database/connection');
 const express = require('express');
 const router = express.Router();
 
-const jwt = require('express-jwt');
+const {signJwt} = require('../src/util/security/jwt');
 
 /* GET users listing. */
 router.get('/', (req, res, next) => {
@@ -100,10 +100,11 @@ router.post('/login', expressValidation('login'), (req, res) => {
               if (results.length > 0) {
                 const data = {
                   userId: results[0].id,
-                  message: 'Login success'
                 }
 
-                return res.send(data);
+                const signedJwt = signJwt(data);
+
+                return res.send(signedJwt);
               } else {
                 res.send(generateErrorResponse(401, INVALID_USERNAME_OR_PASSWORD, 'Username atau Password yang dimasukkan salah'));
               }
