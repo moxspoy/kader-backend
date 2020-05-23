@@ -14,11 +14,7 @@ const jwt = require('express-jwt');
 /* GET users listing. */
 router.get('/', (req, res, next) => {
   pool.getConnection((err, con) => {
-    if (err) return res.sendStatus(400).json({
-      code: DATABASE_ERROR_CODE,
-      errors: [err],
-
-    });
+    if (err) return res.send(generateErrorResponse(400, DATABASE_ERROR_CODE, 'Problem with database'));
 
     const query = 'SELECT * FROM users';
     const handler = (error, results, fields) => {
